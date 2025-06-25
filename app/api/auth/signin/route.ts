@@ -55,12 +55,12 @@ export async function POST(req: Request) {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("API Error:", error);
     return NextResponse.json(
       {
         error: "Internal server error",
-        message: error.message || "Something went wrong",
+        message: error || "Something went wrong",
       },
       { status: 500 }
     );
