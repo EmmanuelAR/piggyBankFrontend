@@ -4,20 +4,23 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../components/Header";
 import { useAuthContext } from "../../contexts/AuthContext";
+import React from "react";
 
 export default function NewSavings() {
   const [amount, setAmount] = useState("");
-  const [days, setDays] = useState("");
+  const [days, setDays] = useState("0");
+  const [minutes, setMinutes] = useState("0");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
   const router = useRouter();
   const { user } = useAuthContext();
 
-  // Function to convert days to timestamp in milliseconds
-  const convertDaysToTimestamp = (days: number): number => {
+  // Function to convert days and minutes to timestamp in milliseconds
+  const convertToTimestamp = (days: number, minutes: number): number => {
     const currentDate = new Date();
     const futureDate = new Date(
-      currentDate.getTime() + days * 24 * 60 * 60 * 1000
+      currentDate.getTime() + days * 24 * 60 * 60 * 1000 + minutes * 60 * 1000
     );
     return futureDate.getTime();
   };
@@ -30,31 +33,47 @@ export default function NewSavings() {
     try {
       const amountNumber = parseFloat(amount);
       const daysNumber = parseInt(days);
+      const minutesNumber = parseInt(minutes) || 0;
 
       if (isNaN(amountNumber) || amountNumber <= 0) {
         throw new Error("Amount must be a valid number greater than 0");
       }
 
-      if (isNaN(daysNumber) || daysNumber <= 0) {
-        throw new Error("Days must be a valid number greater than 0");
+      if (
+        isNaN(daysNumber) ||
+        daysNumber < 0 ||
+        isNaN(minutesNumber) ||
+        minutesNumber < 0
+      ) {
+        throw new Error(
+          "Days and minutes must be valid numbers (0 or greater)"
+        );
       }
 
-      const timestamp = convertDaysToTimestamp(daysNumber);
+      if (daysNumber === 0 && minutesNumber === 0) {
+        throw new Error(
+          "You must specify at least days or minutes greater than 0"
+        );
+      }
 
-      // Here you can add logic to save the savings to your database
+      const timestamp = convertToTimestamp(daysNumber, minutesNumber);
+
       const newSavings = {
         amount: amountNumber,
         days: daysNumber,
+        minutes: minutesNumber,
         timestamp: timestamp,
         createdAt: new Date().toISOString(),
         targetDate: new Date(timestamp).toISOString(),
         userId: user?.id,
       };
 
-      console.log("New savings created:", newSavings);
-
-      // Redirect to main page or savings page
-      router.push("/");
+      // Redirige a la página de resumen con los datos
+      router.push(
+        `/new-savings/summary?amount=${amountNumber}&days=${daysNumber}&minutes=${minutesNumber}&targetDate=${encodeURIComponent(
+          newSavings.targetDate
+        )}`
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creating savings");
     } finally {
@@ -64,6 +83,7 @@ export default function NewSavings() {
 
   const openAuthModal = (mode: "login" | "register") => {
     // Redirect to login if not authenticated
+    console.log("openAuthModal", mode);
     router.push("/");
   };
 
@@ -121,8 +141,28 @@ export default function NewSavings() {
                   id="days"
                   value={days}
                   onChange={(e) => setDays(e.target.value)}
-                  placeholder="30"
-                  min="1"
+                  placeholder="0"
+                  min="0"
+                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  required
+                />
+              </div>
+
+              {/* Minutes field */}
+              <div>
+                <label
+                  htmlFor="minutes"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Number of minutes to save
+                </label>
+                <input
+                  type="number"
+                  id="minutes"
+                  value={minutes}
+                  onChange={(e) => setMinutes(e.target.value)}
+                  placeholder="0"
+                  min="0"
                   className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
                   required
                 />
@@ -130,9 +170,10 @@ export default function NewSavings() {
 
               {/* Timestamp information */}
               {amount &&
-                days &&
+                (days || minutes) &&
                 !isNaN(parseFloat(amount)) &&
-                !isNaN(parseInt(days)) && (
+                (!days || !isNaN(parseInt(days))) &&
+                (!minutes || !isNaN(parseInt(minutes))) && (
                   <div className="bg-gray-700/30 border border-gray-600 rounded-lg p-4">
                     <h3 className="text-sm font-medium text-green-400 mb-2">
                       Savings Summary:
@@ -141,15 +182,26 @@ export default function NewSavings() {
                       <p>
                         Target amount: ${parseFloat(amount).toLocaleString()}
                       </p>
-                      <p>Duration: {parseInt(days)} days</p>
+                      <p>
+                        Duration: {parseInt(days) || 0} days,{" "}
+                        {parseInt(minutes) || 0} minutes
+                      </p>
                       <p>
                         Target date:{" "}
                         {new Date(
-                          convertDaysToTimestamp(parseInt(days))
-                        ).toLocaleDateString("en-US")}
+                          convertToTimestamp(
+                            parseInt(days) || 0,
+                            parseInt(minutes) || 0
+                          )
+                        ).toLocaleString("en-US")}
                       </p>
                       <p className="text-xs text-gray-400 font-mono">
-                        Timestamp: {convertDaysToTimestamp(parseInt(days))} ms
+                        Timestamp:{" "}
+                        {convertToTimestamp(
+                          parseInt(days) || 0,
+                          parseInt(minutes) || 0
+                        )}{" "}
+                        ms
                       </p>
                     </div>
                   </div>

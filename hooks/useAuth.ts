@@ -135,8 +135,6 @@ export function useAuth() {
         };
       }
 
-      console.log("result", result.user);
-      console.log("result.userProfile", result.userProfile);
       // Actualizar el estado local con los datos del usuario
       setUser(result.user);
       setUserProfile(result.userProfile);
