@@ -145,11 +145,11 @@ export function useAuth() {
       router.push("/new-savings");
 
       return { data: result, error: null };
-    } catch (error: any) {
+    } catch (error) {
       console.error("Sign in error:", error);
       return {
         data: null,
-        error: new Error(error.message || "Sign in failed") as AuthError,
+        error: new Error("Sign in failed") as AuthError,
       };
     }
   };
