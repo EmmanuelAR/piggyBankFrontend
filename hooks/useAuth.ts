@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { User, AuthError } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { useRouter } from "next/navigation";
 
 interface UserProfile {
   id: string;
@@ -15,6 +16,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     // Get initial session
@@ -31,6 +33,7 @@ export function useAuth() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("Auth state changed:", _event, session?.user?.id);
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchUserProfile(session.user.id);
@@ -46,14 +49,16 @@ export function useAuth() {
   const fetchUserProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from("user_profiles")
+        .from("users")
         .select("*")
-        .eq("id", userId)
+        .eq("uid", userId)
         .single();
 
       if (error && error.code !== "PGRST116") {
         console.error("Error fetching user profile:", error);
       }
+
+      console.log("dataaaaa", data);
 
       setUserProfile(data);
     } catch (error) {
@@ -103,22 +108,52 @@ export function useAuth() {
       if (profileError) {
         console.error("Error creating user profile:", profileError);
       }
+
+      // Redirigir a new-savings después del registro exitoso
+      router.push("/new-savings");
     }
 
     return { data, error };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (data.user && !error) {
-      await fetchUserProfile(data.user.id);
+      const result = await response.json();
+
+      if (!response.ok) {
+        return {
+          data: null,
+          error: new Error(result.error || "Sign in failed") as AuthError,
+        };
+      }
+
+      console.log("result", result.user);
+      console.log("result.userProfile", result.userProfile);
+      // Actualizar el estado local con los datos del usuario
+      setUser(result.user);
+      setUserProfile(result.userProfile);
+
+      console.log("signIn data", result);
+
+      // Redirigir a new-savings después del login exitoso
+      router.push("/new-savings");
+
+      return { data: result, error: null };
+    } catch (error: any) {
+      console.error("Sign in error:", error);
+      return {
+        data: null,
+        error: new Error(error.message || "Sign in failed") as AuthError,
+      };
     }
-
-    return { data, error };
   };
 
   const signOut = async () => {
@@ -132,7 +167,7 @@ export function useAuth() {
       return { data: null, error: new Error("No user logged in") as AuthError };
 
     const { data, error } = await supabase
-      .from("user_profiles")
+      .from("users")
       .update(updates)
       .eq("id", user.id)
       .select()

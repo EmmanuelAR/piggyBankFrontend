@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuthContext } from "../../contexts/AuthContext";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export default function AuthModal({
   onClose,
   onSwitchMode,
 }: AuthModalProps) {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp } = useAuthContext();
   const [formData, setFormData] = useState({
     wallet_address: "",
     email: "",
@@ -46,14 +46,12 @@ export default function AuthModal({
 
         if (error) throw error;
 
-        alert("¡Registro exitoso! Revisa tu email para confirmar tu cuenta.");
         onClose();
       } else {
         const { error } = await signIn(formData.email, formData.password);
 
         if (error) throw error;
 
-        alert("¡Login exitoso!");
         onClose();
       }
     } catch (error: unknown) {
