@@ -1,8 +1,10 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { User, AuthError, AuthResponse } from "@supabase/supabase-js";
+import { useSetAtom } from "jotai";
+import { userUidAtom } from "./userUidAtom";
 
 interface UserProfile {
   id: string;
@@ -35,6 +37,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const auth = useAuth();
+  const setUserUid = useSetAtom(userUidAtom);
+
+  useEffect(() => {
+    if (auth.user) {
+      setUserUid(auth.user.id);
+    } else {
+      setUserUid(null);
+    }
+  }, [auth.user, setUserUid]);
 
   return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }

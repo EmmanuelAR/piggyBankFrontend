@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../components/Header";
-import { useAuthContext } from "../../contexts/AuthContext";
+
 import React from "react";
+import axios from "axios";
+import { supabase } from "../../lib/supabase";
+import { useAtom } from "jotai";
+import { userUidAtom } from "../../contexts/userUidAtom";
 
 export default function NewSavings() {
   const [amount, setAmount] = useState("");
@@ -14,7 +18,8 @@ export default function NewSavings() {
   const [error, setError] = useState("");
 
   const router = useRouter();
-  const { user } = useAuthContext();
+
+  const [uid] = useAtom(userUidAtom);
 
   // Function to convert days and minutes to timestamp in milliseconds
   const convertToTimestamp = (days: number, minutes: number): number => {
@@ -56,6 +61,17 @@ export default function NewSavings() {
         );
       }
 
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("uid", uid)
+        .single();
+
+      console.log("user", user);
+      if (!user) {
+        throw new Error("User not loaded");
+      }
+
       const timestamp = convertToTimestamp(daysNumber, minutesNumber);
 
       const newSavings = {
@@ -67,6 +83,17 @@ export default function NewSavings() {
         targetDate: new Date(timestamp).toISOString(),
         userId: user?.id,
       };
+
+      console.log("useeer", user);
+
+      const response = await axios.post("/api/contract", {
+        targetContractAddress:
+          "0x067d642b79901280457c4baeaf729f0314b5797719221b222f0bd820d09d2201",
+        entrypoint: "deposit",
+        calldata: [amountNumber.toString(), "0", timestamp.toString()],
+        userAddress: user.wallet_address,
+        userHashedPk: user.private_pk,
+      });
 
       // Redirige a la página de resumen con los datos
       router.push(
