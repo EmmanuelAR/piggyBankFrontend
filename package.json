@@ -15,7 +15,8 @@
     "jotai": "^2.12.5",
     "next": "15.3.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "starknet": "^7.6.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

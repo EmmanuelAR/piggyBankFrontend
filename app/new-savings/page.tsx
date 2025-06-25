@@ -9,6 +9,7 @@ import axios from "axios";
 import { supabase } from "../../lib/supabase";
 import { useAtom } from "jotai";
 import { userUidAtom } from "../../contexts/userUidAtom";
+import { formatAmount } from "../../lib/util";
 
 export default function NewSavings() {
   const [amount, setAmount] = useState("");
@@ -84,9 +85,24 @@ export default function NewSavings() {
         userId: user?.id,
       };
 
-      console.log("useeer", user);
+      const formattedAmount = formatAmount(amountNumber, 6);
+      console.log("formattedAmount", formattedAmount);
+      const responseTransfer = await axios.post("/api/contract", {
+        targetContractAddress:
+          "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+        entrypoint: "transfer",
+        calldata: [
+          "0x067d642b79901280457c4baeaf729f0314b5797719221b222f0bd820d09d2201",
+          formattedAmount.low,
+          0,
+        ],
+        userAddress: user.wallet_address,
+        userHashedPk: user.private_pk,
+      });
 
-      const response = await axios.post("/api/contract", {
+      console.log("responseTransfer", responseTransfer);
+
+      const responseDeposit = await axios.post("/api/contract", {
         targetContractAddress:
           "0x067d642b79901280457c4baeaf729f0314b5797719221b222f0bd820d09d2201",
         entrypoint: "deposit",
@@ -94,6 +110,8 @@ export default function NewSavings() {
         userAddress: user.wallet_address,
         userHashedPk: user.private_pk,
       });
+
+      console.log("responseDeposit", responseDeposit);
 
       // Redirige a la página de resumen con los datos
       router.push(
