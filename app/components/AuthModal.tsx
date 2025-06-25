@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useAuthContext } from "../../contexts/AuthContext";
+import axios from "axios";
+import { useSetAtom } from "jotai";
+import { userProfileAtom } from "../../contexts/userUidAtom";
+import { useRouter } from "next/navigation";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,7 +19,6 @@ export default function AuthModal({
   onClose,
   onSwitchMode,
 }: AuthModalProps) {
-  const { signIn, signUp } = useAuthContext();
   const [formData, setFormData] = useState({
     wallet_address: "",
     email: "",
@@ -25,6 +27,8 @@ export default function AuthModal({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const setUserProfile = useSetAtom(userProfileAtom);
+  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -42,17 +46,18 @@ export default function AuthModal({
 
     try {
       if (mode === "register") {
-        const { error } = await signUp(formData.email, formData.password);
-
-        if (error) throw error;
-
-        onClose();
+        setError("Registration is not implemented.");
       } else {
-        const { error } = await signIn(formData.email, formData.password);
+        const response = await axios.post("/api/auth/signin", {
+          email: formData.email,
+          password: formData.password,
+        });
 
-        if (error) throw error;
+        if (response.data.error) throw new Error(response.data.error);
 
+        setUserProfile(response.data);
         onClose();
+        router.push("/new-savings");
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");

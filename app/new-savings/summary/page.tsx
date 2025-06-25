@@ -1,25 +1,25 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Header from "../../components/Header";
-import { userUidAtom } from "../../../contexts/userUidAtom";
+import { userProfileAtom } from "../../../contexts/userUidAtom";
 import { useAtom } from "jotai";
-import { supabase } from "../../../lib/supabase";
 import axios from "axios";
 import { useState } from "react";
+import { savingsSummaryAtom } from "../../../contexts/savingsSummaryAtom";
 
 export default function SavingsSummary() {
   const router = useRouter();
-  const params = useSearchParams();
-  const [uid] = useAtom(userUidAtom);
+  const [userProfile] = useAtom(userProfileAtom);
+  const [summary] = useAtom(savingsSummaryAtom);
   const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
-  // Obtén los datos del query string
-  const amount = params.get("amount");
-  const days = params.get("days");
-  const minutes = params.get("minutes");
-  const targetDate = params.get("targetDate");
+  // Obtén los datos del átomo
+  const amount = summary?.amount;
+  const days = summary?.days;
+  const minutes = summary?.minutes;
+  const targetDate = summary?.targetDate;
   const openAuthModal = (mode: "login" | "register") => {
     // Redirect to login if not authenticated
     console.log("openAuthModal", mode);
@@ -28,25 +28,20 @@ export default function SavingsSummary() {
 
   const handleWithdraw = async () => {
     try {
-      const { data: user } = await supabase
-        .from("users")
-        .select("*")
-        .eq("uid", uid)
-        .single();
-
+      if (!userProfile) {
+        router.push("/");
+        return;
+      }
       const timestamp = new Date().getTime();
-      console.log("timestamp", timestamp);
-
       const responseDeposit = await axios.post("/api/contract", {
         targetContractAddress: process.env.NEXT_PUBLIC_PIGGY_BANK_CONTRACT,
         entrypoint: "withdraw",
         calldata: [timestamp.toString()],
-        userAddress: user.wallet_address,
-        userHashedPk: user.private_pk,
+        userAddress: userProfile.userProfile.wallet_address,
+        userHashedPk: userProfile.userProfile.private_pk,
       });
       setWithdrawSuccess(responseDeposit.data.result.transactionHash);
     } catch (error) {
-      console.log("error", error);
       setWithdrawError(
         "Oops! The piggy bank is holding your savings hostage. Try again later!"
       );

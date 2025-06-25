@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useAuthContext } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAtom } from "jotai";
+import { userProfileAtom } from "../../contexts/userUidAtom";
 
 interface HeaderProps {
   onLogin: () => void;
@@ -12,16 +13,13 @@ interface HeaderProps {
 
 export default function Header({ onLogin, onRegister }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, userProfile, signOut } = useAuthContext();
   const router = useRouter();
+  const [userProfile, setUserProfile] = useAtom(userProfileAtom);
+  console.log("userProfile", userProfile);
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      router.push("/");
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    }
+  const handleLogout = () => {
+    setUserProfile(null);
+    router.push("/");
   };
 
   const formatWalletAddress = (address: string) => {
@@ -48,55 +46,38 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
           </div>
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            {user ? (
-              <>
-                <Link
-                  href="/"
-                  className="text-gray-300 hover:text-green-400 transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <a
-                  href="/new-savings"
-                  className="text-gray-300 hover:text-green-400 transition-colors"
-                >
-                  New Savings
-                </a>
-              </>
-            ) : (
-              <>
-                <a
-                  href="#benefits"
-                  className="text-gray-300 hover:text-green-400 transition-colors"
-                >
-                  Benefits
-                </a>
-                <a
-                  href="#features"
-                  className="text-gray-300 hover:text-green-400 transition-colors"
-                >
-                  Features
-                </a>
-                <a
-                  href="#about"
-                  className="text-gray-300 hover:text-green-400 transition-colors"
-                >
-                  About
-                </a>
-              </>
-            )}
+            <a
+              href="#benefits"
+              className="text-gray-300 hover:text-green-400 transition-colors"
+            >
+              Benefits
+            </a>
+            <a
+              href="#features"
+              className="text-gray-300 hover:text-green-400 transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#about"
+              className="text-gray-300 hover:text-green-400 transition-colors"
+            >
+              About
+            </a>
           </nav>
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {user ? (
+            {userProfile ? (
               <div className="flex items-center space-x-4">
                 <div className="text-right">
                   <div className="text-gray-300 text-sm">
-                    {userProfile?.email || user.email}
+                    {userProfile.user?.email}
                   </div>
-                  {userProfile?.wallet_address && (
+                  {userProfile.userProfile.wallet_address && (
                     <div className="text-green-400 text-xs font-mono">
-                      {formatWalletAddress(userProfile.wallet_address)}
+                      {formatWalletAddress(
+                        userProfile.userProfile.wallet_address
+                      )}
                     </div>
                   )}
                 </div>
@@ -168,20 +149,12 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
               >
                 About
               </a>
-              {user && (
-                <a
-                  href="/new-savings"
-                  className="block px-3 py-2 text-gray-300 hover:text-green-400 transition-colors"
-                >
-                  New Savings
-                </a>
-              )}
               <div className="pt-4 space-y-2">
-                {user ? (
+                {userProfile ? (
                   <>
                     <div className="px-3 py-2 text-gray-300">
-                      <div>{userProfile?.email || user.email}</div>
-                      {userProfile?.wallet_address && (
+                      <div>{userProfile.email}</div>
+                      {userProfile.wallet_address && (
                         <div className="text-green-400 text-xs font-mono">
                           {formatWalletAddress(userProfile.wallet_address)}
                         </div>
