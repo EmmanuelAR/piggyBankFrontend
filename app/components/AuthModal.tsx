@@ -46,7 +46,17 @@ export default function AuthModal({
 
     try {
       if (mode === "register") {
-        setError("Registration is not implemented.");
+        const response = await axios.post("/api/auth/signup", {
+          email: formData.email,
+          password: formData.password,
+        });
+        console.log("response register", response);
+
+        if (response.data.error) throw new Error(response.data.error);
+
+        setUserProfile(response.data);
+        onClose();
+        router.push("/new-savings");
       } else {
         const response = await axios.post("/api/auth/signin", {
           email: formData.email,
