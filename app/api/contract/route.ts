@@ -28,11 +28,11 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json(response.data, { status: response.status });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       {
         error: "Error calling external API",
-        details: error?.response?.data || error.message,
+        details: error,
       },
       { status: 500 }
     );

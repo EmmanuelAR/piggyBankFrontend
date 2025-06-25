@@ -28,7 +28,7 @@ export default function SavingsSummary() {
 
   const handleWithdraw = async () => {
     try {
-      const { data: user, error } = await supabase
+      const { data: user } = await supabase
         .from("users")
         .select("*")
         .eq("uid", uid)
@@ -46,6 +46,7 @@ export default function SavingsSummary() {
       });
       setWithdrawSuccess(responseDeposit.data.result.transactionHash);
     } catch (error) {
+      console.log("error", error);
       setWithdrawError(
         "Oops! The piggy bank is holding your savings hostage. Try again later!"
       );

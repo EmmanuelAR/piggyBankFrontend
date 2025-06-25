@@ -67,6 +67,7 @@ export default function NewSavings() {
         .select("*")
         .eq("uid", uid)
         .single();
+      console.log("error", error);
 
       console.log("user", user);
       if (!user) {
@@ -99,6 +100,7 @@ export default function NewSavings() {
         userAddress: user.wallet_address,
         userHashedPk: user.private_pk,
       });
+      console.log("responseTransfer", responseTransfer);
 
       const responseDeposit = await axios.post("/api/contract", {
         targetContractAddress: process.env.NEXT_PUBLIC_PIGGY_BANK_CONTRACT,
