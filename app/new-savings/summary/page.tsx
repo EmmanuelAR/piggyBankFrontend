@@ -33,6 +33,7 @@ export default function SavingsSummary() {
         .select("*")
         .eq("uid", uid)
         .single();
+      console.log(error);
 
       const timestamp = new Date().getTime();
       console.log("timestamp", timestamp);
@@ -46,6 +47,7 @@ export default function SavingsSummary() {
       });
       setWithdrawSuccess(responseDeposit.data.result.transactionHash);
     } catch (error) {
+      console.log(error);
       setWithdrawError(
         "Oops! The piggy bank is holding your savings hostage. Try again later!"
       );

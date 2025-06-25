@@ -70,6 +70,7 @@ export default function NewSavings() {
 
       console.log("user", user);
       if (!user) {
+        console.log(error);
         throw new Error("User not loaded");
       }
 
@@ -99,6 +100,7 @@ export default function NewSavings() {
         userAddress: user.wallet_address,
         userHashedPk: user.private_pk,
       });
+      console.log("responseTransfer", responseTransfer);
 
       const responseDeposit = await axios.post("/api/contract", {
         targetContractAddress: process.env.NEXT_PUBLIC_PIGGY_BANK_CONTRACT,
