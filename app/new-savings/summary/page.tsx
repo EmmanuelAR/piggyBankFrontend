@@ -1,24 +1,25 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Header from "../../components/Header";
 import { userProfileAtom } from "../../../contexts/userUidAtom";
 import { useAtom } from "jotai";
 import axios from "axios";
 import { useState } from "react";
+import { savingsSummaryAtom } from "../../../contexts/savingsSummaryAtom";
 
 export default function SavingsSummary() {
   const router = useRouter();
-  const params = useSearchParams();
   const [userProfile] = useAtom(userProfileAtom);
+  const [summary] = useAtom(savingsSummaryAtom);
   const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
-  // Obtén los datos del query string
-  const amount = params.get("amount");
-  const days = params.get("days");
-  const minutes = params.get("minutes");
-  const targetDate = params.get("targetDate");
+  // Obtén los datos del átomo
+  const amount = summary?.amount;
+  const days = summary?.days;
+  const minutes = summary?.minutes;
+  const targetDate = summary?.targetDate;
   const openAuthModal = (mode: "login" | "register") => {
     // Redirect to login if not authenticated
     console.log("openAuthModal", mode);

@@ -9,6 +9,7 @@ import axios from "axios";
 import { useAtom } from "jotai";
 import { userProfileAtom } from "../../contexts/userUidAtom";
 import { formatAmount } from "../../lib/util";
+import { savingsSummaryAtom } from "../../contexts/savingsSummaryAtom";
 
 export default function NewSavings() {
   const [amount, setAmount] = useState("");
@@ -20,6 +21,7 @@ export default function NewSavings() {
   const router = useRouter();
 
   const [userProfile] = useAtom(userProfileAtom);
+  const [summary, setSummary] = useAtom(savingsSummaryAtom);
 
   // Function to convert days and minutes to timestamp in milliseconds
   const convertToTimestamp = (days: number, minutes: number): number => {
@@ -105,12 +107,14 @@ export default function NewSavings() {
 
       console.log("responseDeposit", responseDeposit);
 
-      // Redirige a la página de resumen con los datos
-      router.push(
-        `/new-savings/summary?amount=${amountNumber}&days=${daysNumber}&minutes=${minutesNumber}&targetDate=${encodeURIComponent(
-          newSavings.targetDate
-        )}`
-      );
+      // Guarda los datos en el átomo antes de navegar
+      setSummary({
+        amount: amount,
+        days: days,
+        minutes: minutes,
+        targetDate: newSavings.targetDate,
+      });
+      router.push(`/new-savings/summary`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error creating savings");
     } finally {
