@@ -66,8 +66,10 @@ export function useAuth() {
   const signUp = async (email: string, password: string) => {
     const response = await fetch("/api/wallet", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer cavos-c78c75073a9fd1cbaf99d696`,
+      },
       body: JSON.stringify({ network: "sepolia" }),
     });
 
@@ -80,7 +82,8 @@ export function useAuth() {
     }
 
     const walletData = await response.json();
-    const { address, private_key, public_key } = walletData;
+
+    const { address, private_key, public_key } = walletData?.data;
 
     // 2. Crea el usuario en Supabase
     const { data, error } = await supabase.auth.signUp({
@@ -91,10 +94,10 @@ export function useAuth() {
     if (data.user && !error) {
       // 3. Crea el perfil de usuario con los datos del wallet
       const { error: profileError } = await supabase.from("users").insert({
-        address,
-        private_key,
+        wallet_address: address,
+        private_pk: private_key,
         uid: data.user?.id,
-        public_pk: public_key,
+        public_key: public_key,
       });
 
       if (profileError) {
