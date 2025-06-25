@@ -92,7 +92,7 @@ export default function NewSavings() {
           "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
         entrypoint: "transfer",
         calldata: [
-          "0x067d642b79901280457c4baeaf729f0314b5797719221b222f0bd820d09d2201",
+          process.env.NEXT_PUBLIC_PIGGY_BANK_CONTRACT,
           formattedAmount.low,
           0,
         ],
@@ -100,11 +100,8 @@ export default function NewSavings() {
         userHashedPk: user.private_pk,
       });
 
-      console.log("responseTransfer", responseTransfer);
-
       const responseDeposit = await axios.post("/api/contract", {
-        targetContractAddress:
-          "0x067d642b79901280457c4baeaf729f0314b5797719221b222f0bd820d09d2201",
+        targetContractAddress: process.env.NEXT_PUBLIC_PIGGY_BANK_CONTRACT,
         entrypoint: "deposit",
         calldata: [amountNumber.toString(), "0", timestamp.toString()],
         userAddress: user.wallet_address,

@@ -2,10 +2,15 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../../components/Header";
+import { userUidAtom } from "../../../contexts/userUidAtom";
+import { useAtom } from "jotai";
+import { supabase } from "../../../lib/supabase";
+import axios from "axios";
 
 export default function SavingsSummary() {
   const router = useRouter();
   const params = useSearchParams();
+  const [uid] = useAtom(userUidAtom);
 
   // Obtén los datos del query string
   const amount = params.get("amount");
@@ -16,6 +21,37 @@ export default function SavingsSummary() {
     // Redirect to login if not authenticated
     console.log("openAuthModal", mode);
     router.push("/");
+  };
+
+  const handleWithdraw = async () => {
+    try {
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("uid", uid)
+        .single();
+
+      const timestamp = new Date().getTime();
+      console.log("timestamp", timestamp);
+
+      const responseDeposit = await axios.post("/api/contract", {
+        targetContractAddress: process.env.NEXT_PUBLIC_PIGGY_BANK_CONTRACT,
+        entrypoint: "withdraw",
+        calldata: [timestamp.toString()],
+        userAddress: user.wallet_address,
+        userHashedPk: user.private_pk,
+      });
+      console.log(
+        "responseTransfer",
+        responseDeposit.data.result.transaction_hash
+      );
+
+      alert("Withdraw successful!");
+      // Aquí puedes redirigir o actualizar el estado si lo necesitas
+    } catch (error) {
+      alert("Withdraw failed!");
+      console.error(error);
+    }
   };
 
   return (
@@ -42,7 +78,7 @@ export default function SavingsSummary() {
             </p>
           </div>
           <button
-            onClick={() => alert("Withdraw action!")}
+            onClick={handleWithdraw}
             className="mt-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
           >
             Withdraw
