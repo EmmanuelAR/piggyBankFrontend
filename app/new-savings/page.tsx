@@ -6,9 +6,8 @@ import Header from "../components/Header";
 
 import React from "react";
 import axios from "axios";
-import { supabase } from "../../lib/supabase";
 import { useAtom } from "jotai";
-import { userUidAtom } from "../../contexts/userUidAtom";
+import { userProfileAtom } from "../../contexts/userUidAtom";
 import { formatAmount } from "../../lib/util";
 
 export default function NewSavings() {
@@ -20,7 +19,7 @@ export default function NewSavings() {
 
   const router = useRouter();
 
-  const [uid] = useAtom(userUidAtom);
+  const [userProfile] = useAtom(userProfileAtom);
 
   // Function to convert days and minutes to timestamp in milliseconds
   const convertToTimestamp = (days: number, minutes: number): number => {
@@ -62,16 +61,9 @@ export default function NewSavings() {
         );
       }
 
-      const { data: user, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("uid", uid)
-        .single();
-      console.log("error", error);
-
-      console.log("user", user);
-      if (!user) {
-        throw new Error("User not loaded");
+      if (!userProfile) {
+        router.push("/");
+        return;
       }
 
       const timestamp = convertToTimestamp(daysNumber, minutesNumber);
@@ -83,8 +75,9 @@ export default function NewSavings() {
         timestamp: timestamp,
         createdAt: new Date().toISOString(),
         targetDate: new Date(timestamp).toISOString(),
-        userId: user?.id,
+        userId: userProfile.user?.id,
       };
+      console.log("newSavings", newSavings);
 
       const formattedAmount = formatAmount(amountNumber, 6);
       console.log("formattedAmount", formattedAmount);
@@ -97,8 +90,8 @@ export default function NewSavings() {
           formattedAmount.low,
           0,
         ],
-        userAddress: user.wallet_address,
-        userHashedPk: user.private_pk,
+        userAddress: userProfile.userProfile.wallet_address,
+        userHashedPk: userProfile.userProfile.private_pk,
       });
       console.log("responseTransfer", responseTransfer);
 
@@ -106,8 +99,8 @@ export default function NewSavings() {
         targetContractAddress: process.env.NEXT_PUBLIC_PIGGY_BANK_CONTRACT,
         entrypoint: "deposit",
         calldata: [amountNumber.toString(), "0", timestamp.toString()],
-        userAddress: user.wallet_address,
-        userHashedPk: user.private_pk,
+        userAddress: userProfile.userProfile.wallet_address,
+        userHashedPk: userProfile.userProfile.private_pk,
       });
 
       console.log("responseDeposit", responseDeposit);

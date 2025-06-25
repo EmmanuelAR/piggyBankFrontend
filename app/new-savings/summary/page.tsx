@@ -2,16 +2,15 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "../../components/Header";
-import { userUidAtom } from "../../../contexts/userUidAtom";
+import { userProfileAtom } from "../../../contexts/userUidAtom";
 import { useAtom } from "jotai";
-import { supabase } from "../../../lib/supabase";
 import axios from "axios";
 import { useState } from "react";
 
 export default function SavingsSummary() {
   const router = useRouter();
   const params = useSearchParams();
-  const [uid] = useAtom(userUidAtom);
+  const [userProfile] = useAtom(userProfileAtom);
   const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null);
   const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
@@ -28,25 +27,20 @@ export default function SavingsSummary() {
 
   const handleWithdraw = async () => {
     try {
-      const { data: user } = await supabase
-        .from("users")
-        .select("*")
-        .eq("uid", uid)
-        .single();
-
+      if (!userProfile) {
+        router.push("/");
+        return;
+      }
       const timestamp = new Date().getTime();
-      console.log("timestamp", timestamp);
-
       const responseDeposit = await axios.post("/api/contract", {
         targetContractAddress: process.env.NEXT_PUBLIC_PIGGY_BANK_CONTRACT,
         entrypoint: "withdraw",
         calldata: [timestamp.toString()],
-        userAddress: user.wallet_address,
-        userHashedPk: user.private_pk,
+        userAddress: userProfile.userProfile.wallet_address,
+        userHashedPk: userProfile.userProfile.private_pk,
       });
       setWithdrawSuccess(responseDeposit.data.result.transactionHash);
     } catch (error) {
-      console.log("error", error);
       setWithdrawError(
         "Oops! The piggy bank is holding your savings hostage. Try again later!"
       );
