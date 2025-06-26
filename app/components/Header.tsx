@@ -75,9 +75,7 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                   </div>
                   {userProfile.userProfile.wallet_address && (
                     <div className="text-green-400 text-xs font-mono">
-                      {formatWalletAddress(
-                        userProfile.userProfile.wallet_address
-                      )}
+                      {userProfile.userProfile.wallet_address}
                     </div>
                   )}
                 </div>
@@ -154,9 +152,9 @@ export default function Header({ onLogin, onRegister }: HeaderProps) {
                   <>
                     <div className="px-3 py-2 text-gray-300">
                       <div>{userProfile.email}</div>
-                      {userProfile.wallet_address && (
+                      {userProfile.userProfile.wallet_address && (
                         <div className="text-green-400 text-xs font-mono">
-                          {formatWalletAddress(userProfile.wallet_address)}
+                          {userProfile.userProfile.wallet_address}
                         </div>
                       )}
                     </div>

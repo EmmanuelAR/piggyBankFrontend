@@ -277,6 +277,20 @@ export default function NewSavings() {
           </div>
         </div>
       </main>
+      {/* Info box about funding the account */}
+      {userProfile?.userProfile?.wallet_address && (
+        <div className="max-w-2xl mx-auto mt-8">
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg flex items-center justify-between">
+            <span>
+              <strong>Note:</strong> If you want to create a new saving, you
+              must fund your account first because it starts with zero balance.
+            </span>
+            <span className="ml-4 text-xs font-mono bg-gray-200 px-2 py-1 rounded">
+              {userProfile.userProfile.wallet_address}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
